@@ -1,0 +1,37 @@
+apiVersion: kubedb.com/v1alpha2
+kind: MongoDB
+metadata:
+  name: mg-simple
+  namespace: demo
+spec:
+  version: "4.4.6"
+  init:
+    script:
+#      configMap:
+#        name: my-config
+      scriptPath: "sync-test"
+      git:
+        args:
+        - --repo=https://github.com/Arnobkumarsaha/sync-test
+        - --depth=1
+        - --add-user=true
+        - --period=60s
+        - --root=/git
+        # terminate after successful sync
+        - --one-time
+        securityContext:
+          runAsUser: 999 # 65533
+    podTemplate:
+      spec:
+        # permission for reading ssh key
+        securityContext:
+         fsGroup: 999 # 65533
+  storageType: Durable
+  storage:
+    storageClassName: "standard"
+    accessModes:
+      - ReadWriteOnce
+    resources:
+      requests:
+        storage: 10Gi
+  terminationPolicy: WipeOut
